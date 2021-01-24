@@ -1,0 +1,19 @@
+﻿@model TransferInfos
+
+@{
+    ViewData["Title"] = "Index";
+}
+<style>
+    [hidden] {
+        display: none !important;
+    }
+</style>
+<form asp-action="Index" enctype="multipart/form-data">
+    <input asp-for="ExcelFile" />
+    <input type="submit" />
+    <label class="btn btn-default btn-primary">
+        Browse <input type="file" hidden>
+    </label>
+</form>
+
+

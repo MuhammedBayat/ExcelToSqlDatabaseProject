@@ -1,0 +1,215 @@
+﻿@model ExceltoDatabaseProject.ViewModels.Home.MatchColumnViewModel
+@{
+    ViewData["Title"] = "MatchColumns";
+}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <div class="col-12"><button id="btnCheckConnection">CHECK CONNECTION</button></div>
+            <div class="col-6">SERVER ADI</div>
+            <div class="col-6"><input type="text" id="txtServer" /></div>
+            <div class="col-6">KULLANICI ADI</div>
+            <div class="col-6"><input type="text" id="txtUserName" /></div>
+            <div class="col-6">SIFRE</div>
+            <div class="col-6"><input type="text" id="txtPassword" /></div>
+            @*<div class="col-6">SIFRE</div>*@
+            <div class="col-6"><button id="btnGetDatabases">VERİTABANLARINI GETİR</button></div>
+            <div class="col-6">
+                <select id="sDatabase">
+                </select>
+            </div>
+            <div class="col-6"><button id="btnGetTables">TABLOLARI GETİR</button></div>
+            <div class="col-6">
+                <select id="sTables">
+                </select>
+            </div>
+            <div class="col-6"><button id="btnGetTableColumns">KOLONLARI GETİR</button></div>
+            <div class="col-6"><button id="btnTransfer">AKTAR</button></div>
+
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-6">
+            <div class="col-12"><h1>Excel Kolonları</h1></div>
+            @foreach (string item in Model.ExcelColumnList)
+            {
+                <select class="form-control" name="excelColumns">
+                    <option value="@item">@item</option>
+                </select>
+            }
+        </div>
+        <div class="col-6">
+            <div class="col-12"><h1>Sql Kolonları</h1></div>
+            @foreach (string item in Model.ExcelColumnList)
+            {
+                <select class="form-control columnList" name="sqlColumns">
+                    @*<option value="@item">@item</option>*@
+                </select>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            //let searchParams = new URLSearchParams(window.location.search).get('file');
+            //alert(searchParams);
+        });
+
+        $("#btnCheckConnection").click(function () {
+            $.ajax({
+                url: '/Home/CheckConnection',
+                data: {
+                    serverName: $("#txtServer").val(),
+                    UserName: $("#txtUserName").val(),
+                    password: $("#txtPassword").val()
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.result) {
+                        alert(data.message);
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
+        $("#btnGetDatabases").click(function () {
+            $('#sDatabase')
+                .find('option')
+                .remove();
+
+            $.ajax({
+                url: '/Home/GetDatabases',
+                data: {
+                    serverName: $("#txtServer").val(),
+                    UserName: $("#txtUserName").val(),
+                    password: $("#txtPassword").val()
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.result) {
+
+                        $.each(data.data, function (i, item) {
+                            $('#sDatabase').append($('<option>', {
+                                value: item,
+                                text: item
+                            }));
+                        });
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
+        $("#btnGetTables").click(function () {
+            $('#sTables')
+                .find('option')
+                .remove();
+
+            $.ajax({
+                url: '/Home/GetTables',
+                data: {
+                    serverName: $("#txtServer").val(),
+                    UserName: $("#txtUserName").val(),
+                    password: $("#txtPassword").val(),
+                    database: $("#sDatabase").val()
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.result) {
+
+                        $.each(data.data, function (i, item) {
+                            $('#sTables').append($('<option>', {
+                                value: item,
+                                text: item
+                            }));
+                        });
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
+        $("#btnGetTableColumns").click(function () {
+            $('.columnList')
+                .find('option')
+                .remove();
+
+            $.ajax({
+                url: '/Home/GetTableColumns',
+                data: {
+                    serverName: $("#txtServer").val(),
+                    UserName: $("#txtUserName").val(),
+                    password: $("#txtPassword").val(),
+                    database: $("#sDatabase").val(),
+                    tableName: $("#sTables").val()
+                },
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.result) {
+
+                        $.each(data.data, function (i, item) {
+                            $('.columnList').append($('<option>', {
+                                value: item,
+                                text: item
+                            }));
+                        });
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
+
+        $("#btnTransfer").click(function () {
+            var verifyCode = "";
+            var excelColumns = [];
+            var sqlColumns = [];
+
+            $("[name='excelColumns']").each(function () {
+                //verifyCode += this.value;
+                excelColumns.push(this.value);
+
+            });
+            $("[name='sqlColumns']").each(function () {
+                //verifyCode += this.value;
+                sqlColumns.push(this.value);
+
+            });
+
+
+            $.ajax({
+                url: '/Home/TransferDatabase',
+                data: {
+                    serverName: $("#txtServer").val(),
+                    UserName: $("#txtUserName").val(),
+                    password: $("#txtPassword").val(),
+                    database: $("#sDatabase").val(),
+                    selectingTable: $("#sTables").val(),
+                    fileName: new URLSearchParams(window.location.search).get('file'),
+                    excelColumns: excelColumns,
+                    sqlColumns: sqlColumns
+                    },
+                type: 'POST',
+                dataType: 'json',
+                success: function (data) {
+                    if (data.result) {
+                    }
+                    else {
+                        alert(data.message);
+                    }
+                }
+            });
+        });
+    </script>
+}
